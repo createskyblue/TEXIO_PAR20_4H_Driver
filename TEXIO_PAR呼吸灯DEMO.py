@@ -20,8 +20,6 @@ class DeviceController:
             raise Exception(f"无法打开串口 {port}")
         
         self.last_send_time = 0  # 上次发送指令的时间
-        self.voltage_setting = None  # 记忆电压设置
-        self.current_setting = None  # 记忆电流设置
         
     @staticmethod
     def calculate_checksum(data):
@@ -95,13 +93,7 @@ class DeviceController:
             return {"code": -1, "msg": "Invalid memory object"}
         
         self.send_instruction(f"AV{memoryObjCode}{voltage:.3f}")
-        self.voltage_setting = voltage  # 更新记忆电压设置
         return {"code": 0, "msg": "Success"}
-    
-    def get_voltage(self):
-        """获取当前设定的电压"""
-        return self.voltage_setting
-    
     def set_current(self, current, is_uaAccuracy = False, memoryObj="workspace"):
         memoryObjCode = ""
         if (is_uaAccuracy == False):
@@ -132,13 +124,8 @@ class DeviceController:
                 return {"code": -1, "msg": "Invalid memory object"}
         
         self.send_instruction(f"AA{memoryObjCode}{current:.3f}")
-        self.current_setting = current  # 更新记忆电流设置
         return {"code": 0, "msg": "Success"}
-    
-    def get_current(self):
-        """获取当前设定的电流"""
-        return self.current_setting
-    
+
     #写一个函数用于选择输出，之行为PR0/PR1/PR2/PR3 分别为：工作区、记忆1、记忆2、记忆3，传入参数memoryObj
     def select_output(self, memoryObj):
         if (memoryObj == "workspace"):
