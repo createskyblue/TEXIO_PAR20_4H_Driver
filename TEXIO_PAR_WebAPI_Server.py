@@ -160,6 +160,10 @@ class DeviceController:
     
     def toggle_protection(self, enable=True):
         self.send_instruction("APT1" if enable else "APT0")
+        
+    # RA0 和 RA1 来切换是否使用微安模式，RA1为激活
+    def set_ua_accuracy(self, enable):
+        self.send_instruction("ARA1" if enable else "ARA0")
     
     def getOutputStatus(self):
         # 执行指令ST0，返回：
@@ -296,6 +300,13 @@ async def unlock_panel():
 async def toggle_protection(enable: bool = True):
     controller = DeviceController(port='COM47')
     controller.toggle_protection(enable)
+    controller.close()
+    return {"code": 0, "msg": "Success"}
+
+@app.post("/api/set_ua_accuracy/")
+async def set_ua_accuracy(enable: bool):
+    controller = DeviceController(port='COM47')
+    controller.set_ua_accuracy(enable)
     controller.close()
     return {"code": 0, "msg": "Success"}
 
