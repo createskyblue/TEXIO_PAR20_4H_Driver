@@ -39,6 +39,12 @@ class DeviceController:
         print(f"回显数据 (HEX): {hex_data}\n")
     
     def send_instruction(self, command, need_response=False):
+        # 确保命令之间的延迟大于等于500ms
+        current_time = time.time()
+        delay = current_time - self.last_send_time
+        if delay < 0.5:  # 如果上次发送时间小于500ms之前
+            time.sleep(0.5 - delay) #日文版手册推荐指令时间500ms
+            
         data = bytearray(command, 'ascii')
         checksum = self.calculate_checksum(data)
         enq, etx = 0x05, 0x03
@@ -70,13 +76,13 @@ class DeviceController:
                 else:
                     ack_received_count += 1  # 增加ACK计数器
                     
-            if time.time() - start_time > 0.5:
+            if time.time() - start_time > 5:
                 received_data = bytearray()
                 break
 
         self.print_echo(received_data)
-
         self.last_send_time = time.time()  # 更新最后一次发送的时间
+        
         return received_data
     
     def set_voltage(self, voltage, memoryObj="workspace"):
@@ -238,21 +244,62 @@ def breathing_light(controller, duration, min_voltage, max_voltage, cycle_time):
 if __name__ == "__main__":
     # 用户可以在这里指定串口名称，例如 '/dev/ttyUSB0' 或 'COM47'
     controller = DeviceController(port='COM47')
+    #关闭输出
+    controller.control_output(False)
+    
+    
+    #设定工作区电压为1.5V， 电流为0.15A
+    controller.set_voltage(1.5)
+    controller.set_current(1.5)
+    controller.set_current(0.15, is_uaAccuracy=True)
+    #设置记忆1电压为3.3V，电流为1A，ua档0.15A
+    controller.set_voltage(3.3, memoryObj="memory1")
+    controller.set_current(1, memoryObj="memory1")
+    controller.set_current(0.15, is_uaAccuracy=True, memoryObj="memory1")
+    #设置记忆2电压为5V，电流为2A，ua档1A
+    controller.set_voltage(5, memoryObj="memory2")
+    controller.set_current(2, memoryObj="memory2")
+    controller.set_current(1, is_uaAccuracy=True, memoryObj="memory2")
+    #设置记忆3电压为12V，电流为4A，ua档1A
+    controller.set_voltage(12, memoryObj="memory3")
+    controller.set_current(4, memoryObj="memory3")
+    controller.set_current(1, is_uaAccuracy=True, memoryObj="memory3")
+    time.sleep(1)
+    #获取预设值
     controller.getMemoryPreset()
-    # #设置工作区输出1V 电流0.1A 使能输出 切换到工作区
-    # controller.set_voltage(1)
-    # controller.set_current(0.15)
-    # controller.select_output("workspace")
-    # controller.control_output(True)
+    
+    #演示打开输出保护，切换到记忆1，打开输出，3秒后关闭输出
+    controller.toggle_protection(True)
+    controller.select_output("memory1")
+    controller.control_output(True)
+    time.sleep(3)
+    controller.control_output(False)
+    
+    #演示切换记忆2，打开输出，3秒后关闭输出
+    controller.select_output("memory2")
+    controller.control_output(True)
+    time.sleep(3)
+    controller.control_output(False)
+    
+    #演示切换记忆3，打开输出，3秒后关闭输出
+    controller.select_output("memory3")
+    controller.control_output(True)
+    time.sleep(3)
+    controller.control_output(False)
+    
+    #设置工作区输出1V 电流0.1A 使能输出 切换到工作区
+    controller.set_voltage(0)
+    controller.set_current(0)
+    controller.select_output("workspace")
+    controller.control_output(False)
     
     
-    # try:
-    #     while(1):
-    #         controller.syncOutputStatus()
-    #         time.sleep(3)
-    # finally:
-    #     # 关闭串口连接
-    #     controller.close()
+    try:
+        #运行呼吸灯DEMO
+        breathing_light(controller, 15, 2.5, 3.3, 2.5)
+    finally:
+        # 关闭串口连接
+        controller.close()
 
 
 
