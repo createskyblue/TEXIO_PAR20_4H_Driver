@@ -76,7 +76,7 @@ class DeviceController:
             # 从串口读取一个字节
             byte = self.ser.read(1)
             if byte:
-                
+                接收缓冲区 += self.ser.read(1)
                 最后接收时间 = time.time()
                     
         print(f"接收数据耗时: {time.time() - 最后接收时间:.3f} 秒")
