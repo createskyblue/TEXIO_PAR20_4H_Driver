@@ -29,7 +29,7 @@ class DeviceController:
             bytesize=serial.SEVENBITS,
             parity=serial.PARITY_EVEN,
             stopbits=serial.STOPBITS_ONE,
-            timeout=0.1
+            timeout=0
         )
         if not self.ser.isOpen():
             raise Exception(f"无法打开串口 {port}")
@@ -69,14 +69,13 @@ class DeviceController:
         self.ser.write(instruction)
 
         接收缓冲区 = bytearray()
-        字符接收超时 = 0.1  # 每个字符的接收超时时间
         最后接收时间 = time.time()
         
-        while (time.time() - 最后接收时间) < 字符接收超时:
+        while (time.time() - 最后接收时间) < 0.5:
             # 从串口读取一个字节
-            byte = self.ser.read(1)
+            byte = self.ser.read_all()
             if byte:
-                接收缓冲区 += self.ser.read(1)
+                接收缓冲区 += byte
                 最后接收时间 = time.time()
                     
         print(f"接收数据耗时: {time.time() - 最后接收时间:.3f} 秒")
