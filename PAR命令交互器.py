@@ -56,12 +56,17 @@ while True:
     # 发送指令到串口
     ser.write(instruction)
     
-    time.sleep(0.5)
-
-    # 接收串口数据并回显
-    received_data = ser.read(ser.in_waiting)  # 读取所有接收到的数据
-    if received_data:
-        print_echo(received_data)
+    接收计时器 = time.time()
+    接收缓冲区 = bytearray()
+    while time.time() - 接收计时器 < 0.3:
+        # 从串口读取一个字节
+        byte = ser.read(1)
+        if byte:
+            接收缓冲区 += byte
+            接收计时器 = time.time()
+            
+    # 打印回显数据
+    print_echo(接收缓冲区)
 
 # 关闭串口
 ser.close()
