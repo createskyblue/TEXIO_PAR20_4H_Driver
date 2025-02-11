@@ -70,10 +70,15 @@ class DeviceController:
 
         接收缓冲区 = bytearray()
         最后接收时间 = time.time()
+        接收超时时间 = 0.1
         
-        while (time.time() - 最后接收时间) < 0.5:
+        #find发送指令，如果包含关键词ST，则超时0.5
+        if command.find("ST") != -1:
+            接收超时时间 = 0.5
+        
+        while (time.time() - 最后接收时间) < 接收超时时间:
             # 从串口读取一个字节
-            byte = self.ser.read_all()
+            byte = self.ser.read(1)
             if byte:
                 接收缓冲区 += byte
                 最后接收时间 = time.time()
